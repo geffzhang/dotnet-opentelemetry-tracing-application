@@ -92,7 +92,7 @@ curl -X POST https://localhost:5xxx/order \
    - Using Swagger UI: Try the GET /order/{id} endpoint
    - Using curl:
 ```bash
-curl -k https://localhost:7xxx/order/1
+curl -k https://localhost:5xxx/order/1
 ```
 
 ## Viewing Traces in OpenObserve
