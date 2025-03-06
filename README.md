@@ -99,14 +99,8 @@ curl -k https://localhost:7xxx/order/1
 
 1. Navigate to the Traces section
 2. You should see traces appearing after making API requests
-3. Each trace will show:
-   - The complete request flow
-   - Order processing steps
-   - External service calls
-   - Any errors that occurred
 
-
-
+![Image](https://github.com/user-attachments/assets/062e5767-2774-4e93-bed1-d043d447a7a6)
 
 > Note: There might be a slight delay before traces appear due to batching and export intervals
 
