@@ -19,20 +19,6 @@ Each endpoint is instrumented with OpenTelemetry to capture:
 - [.NET SDK 6.0 or newer](https://dotnet.microsoft.com/download)
 - OpenObserve: You can get started with [OpenObserve Cloud](https://cloud.openobserve.ai) or a [self hosted installation](https://openobserve.ai/docs/quickstart/#self-hosted-installation). 
 
-
-## Project Structure
-
-```
-dotnet-opentelemetry-tracing-demo/
-├── Controllers/
-│   └── OrderController.cs      # API endpoints implementation
-├── Models/
-│   └── Order.cs               # Order data model
-├── Telemetry/
-│   └── TracingInstrumentation.cs  # OpenTelemetry setup
-└── Program.cs                 # Application configuration
-```
-
 ## Getting Started
 
 1. **Clone the Repository:**
