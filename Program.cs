@@ -1,8 +1,12 @@
+using Microsoft.OpenApi.Models;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Logs;
+using System.Diagnostics;
+using System.Text;
 using TracingDemo.Telemetry;
-using Microsoft.OpenApi.Models;
 
 // These are extension methods, we don't need their namespaces
 // using OpenTelemetry.Instrumentation.AspNetCore;
@@ -27,7 +31,7 @@ builder.Logging.AddOpenTelemetry(logging => {
         .AddConsoleExporter()  // Keep console logging for debugging
         .AddOtlpExporter(otlpOptions => {
             otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/logs");
-            otlpOptions.Headers = "Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpFNXcya2ZNRDVCQ082bzM5";
+            otlpOptions.Headers = "Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpYdmdNN0c2MklSODd0V1J0";
             otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
         });
 });
@@ -41,7 +45,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddHttpClient();
 
-// Configure OpenTelemetry Tracing
 builder.Services.AddOpenTelemetry()
     .WithTracing(builder => builder
         .SetResourceBuilder(resourceBuilder)
@@ -51,9 +54,30 @@ builder.Services.AddOpenTelemetry()
         .AddOtlpExporter(opts =>
         {
             opts.Endpoint = new Uri("http://localhost:5080/api/default/v1/traces");
-            opts.Headers = "Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpFNXcya2ZNRDVCQ082bzM5";
+            opts.Headers = "Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpYdmdNN0c2MklSODd0V1J0";
             opts.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
-        }));
+        })
+   )
+    .WithMetrics(metricsBuilder => metricsBuilder
+    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(TracingInstrumentation.ServiceName))
+    .AddRuntimeInstrumentation() // This line will now work
+    .AddHttpClientInstrumentation()
+    .AddAspNetCoreInstrumentation()
+    .AddConsoleExporter()
+    .AddOtlpExporter(configure =>
+    {
+        configure.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+        {
+            MaxQueueSize = 100,        // 减小队列避免堆积
+            MaxExportBatchSize = 10,   // 减小批量大小
+            ScheduledDelayMilliseconds = 500, // 更频繁导出
+        };
+        configure.Endpoint = new Uri($"http://localhost:5080/api/default/v1/metrics"); // OpenObserve endpoint
+        configure.Headers = $"Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpYdmdNN0c2MklSODd0V1J0";
+        configure.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+    })
+);
+
 
 var app = builder.Build();
        
