@@ -25,13 +25,22 @@ var resourceBuilder = ResourceBuilder.CreateDefault()
         ["service.version"] = "1.0.0"
     });
 
+var credentials = "cm9vdEBleGFtcGxlLmNvbTo2akpEUG1qaW5LQnZzREZW";
+var endpoint = "http://localhost:5080/api/default";
+
 builder.Logging.AddOpenTelemetry(logging => {
     logging.IncludeFormattedMessage = true;
     logging.SetResourceBuilder(resourceBuilder)
         .AddConsoleExporter()  // Keep console logging for debugging
         .AddOtlpExporter(otlpOptions => {
-            otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/logs");
-            otlpOptions.Headers = "Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpYdmdNN0c2MklSODd0V1J0";
+            otlpOptions.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+            {
+                MaxQueueSize = 100,        // 减小队列避免堆积
+                MaxExportBatchSize = 10,   // 减小批量大小
+                ScheduledDelayMilliseconds = 500, // 更频繁导出
+            };
+            otlpOptions.Endpoint = new Uri($"{endpoint}/v1/logs");
+            otlpOptions.Headers = $"Authorization=Basic {credentials}";
             otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
         });
 });
@@ -53,8 +62,14 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddOtlpExporter(opts =>
         {
-            opts.Endpoint = new Uri("http://localhost:5080/api/default/v1/traces");
-            opts.Headers = "Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpYdmdNN0c2MklSODd0V1J0";
+            opts.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+            {
+                MaxQueueSize = 100,        // 减小队列避免堆积
+                MaxExportBatchSize = 10,   // 减小批量大小
+                ScheduledDelayMilliseconds = 500, // 更频繁导出
+            };
+            opts.Endpoint = new Uri($"{endpoint}/v1/traces");
+            opts.Headers = $"Authorization=Basic {credentials}";
             opts.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
         })
    )
@@ -72,8 +87,8 @@ builder.Services.AddOpenTelemetry()
             MaxExportBatchSize = 10,   // 减小批量大小
             ScheduledDelayMilliseconds = 500, // 更频繁导出
         };
-        configure.Endpoint = new Uri($"http://localhost:5080/api/default/v1/metrics"); // OpenObserve endpoint
-        configure.Headers = $"Authorization=Basic cm9vdEBleGFtcGxlLmNvbTpYdmdNN0c2MklSODd0V1J0";
+        configure.Endpoint = new Uri($"{endpoint}/v1/metrics"); // OpenObserve endpoint
+        configure.Headers = $"Authorization=Basic {credentials}";
         configure.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
     })
 );
